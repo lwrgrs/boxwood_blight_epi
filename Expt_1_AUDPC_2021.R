@@ -34,6 +34,13 @@ e1_2021_audpc <-
   group_by(Cultivar, Rep) %>%
   summarise(AUDPC = audpc(mean_pleaf, days)) # calculate AUDPC for each cultivar
 
+e1_2021_audpc_species <-
+dat_2021 %>%
+  group_by(days, Species, Rep) %>%
+  summarise(mean_pleaf = mean(pleaf)) %>%
+  group_by(Species, Rep) %>%
+  summarise(AUDPC = audpc(mean_pleaf, days))
+
 e1_avg_audpc <- 
   e1_audpc %>% # average AUDPC across reps for each cultivar
   group_by(Cultivar) %>%
@@ -47,6 +54,11 @@ m1_2021 <- aov(AUDPC ~ Cultivar + Rep, data = e1_2021_audpc)
 summary(m1_2021)
 
 HSD.test(m1_2021, 'Cultivar', console = T)
+
+m2_2021 <- aov(AUDPC ~ Species + Rep, data = e1_2021_audpc_species)
+summary(m2_2021)
+
+HSD.test(m2_2021, 'Species', console = T)
 
 ##
 ### plots
@@ -68,6 +80,24 @@ e1_2021_audpc %>% # bar graph of AUDPC values for each cultivar
                                    vjust = 1)) +
   labs(y = 'Mean AUDPC', 
        x = 'Cultivar',
+       title = 'AUDPC Values for May - September 2021', 
+       subtitle = 'Low Gap, NC') 
+
+e1_2021_audpc_species %>% # bar graph of AUDPC values for each species
+  group_by(Species) %>%
+  summarise(mean_AUDPC = mean(AUDPC),
+            se = sd(AUDPC)/sqrt(n())) #%>%
+  filter(is.na(mean_AUDPC) == F) %>%
+  ggplot(aes(x = reorder(Species, mean_AUDPC), y = mean_AUDPC)) +
+  geom_bar(stat = 'identity') +
+  geom_errorbar(aes(ymin = mean_AUDPC - se,
+                    ymax = mean_AUDPC + se),
+                width = 0.5) +
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1, 
+                                   vjust = 1)) +
+  labs(y = 'Mean AUDPC', 
+       x = 'Species',
        title = 'AUDPC Values for May - September 2021', 
        subtitle = 'Low Gap, NC') 
 

@@ -16,11 +16,11 @@ dat_2020 <-
     )
   ) # read in data
 
-rating$Treatment. <- as.factor(rating$Treatment.)
-rating$Rep <- as.factor(rating$Rep)
-rating$pleaf <- as.numeric(rating$pleaf)
-rating$pdefol <- as.numeric(rating$pdefol)
-rating$pstem <- as.numeric(rating$pstem) # changing data types
+dat_2020$Treatment. <- as.factor(dat_2020$Treatment.)
+dat_2020$Rep <- as.factor(dat_2020$Rep)
+dat_2020$pleaf <- as.numeric(dat_2020$pleaf)
+dat_2020$pdefol <- as.numeric(dat_2020$pdefol)
+dat_2020$pstem <- as.numeric(dat_2020$pstem) # changing data types
 
 ##
 ### incomplete block anova
@@ -62,14 +62,26 @@ e1_2020_audpc <-
   group_by(Treatment., Rep) %>%
   summarise(AUDPC = audpc(mean_pleaf, days)) # calculate AUDPC for each cultivar
 
+e1_2020_audpc_species <-
+dat_2020 %>%
+  group_by(days, Species, Rep) %>%
+  summarise(mean_pleaf = mean(pleaf)) %>%
+  group_by(Species, Rep) %>%
+  summarise(AUDPC = audpc(mean_pleaf, days)) # calculate AUDPC for each species
+
 ##
 ### audpc anova
 ##
 
-m1_2020 <- aov(AUDPC ~ Treatment. + Rep, data = e1_2020_audpc)
+m1_2020 <- aov(AUDPC ~ Treatment. + Rep, data = e1_2020_audpc) # cultivar
 summary(m1_2020)
 
 HSD.test(m1_2020, 'Treatment.', console = T)
+
+m2_2020 <- aov(AUDPC ~ Species + Rep, data = e1_2020_audpc_species) # species
+summary(m2_2020)
+
+HSD.test(m2_2020, 'Species', console = T)
 
 ##
 ### plots
@@ -90,6 +102,23 @@ e1_2020_audpc %>% # bar graph of AUDPC values for each cultivar
                                    vjust = 1)) +
   labs(y = 'Mean AUDPC', 
        x = 'Cultivar',
+       title = 'AUDPC Values for May - September 2020', 
+       subtitle = 'Low Gap, NC') 
+
+e1_2020_audpc_species %>% # bar graph of AUDPC values for each species
+  group_by(Species) %>%
+  summarise(mean_AUDPC = mean(AUDPC),
+            se = sd(AUDPC)/sqrt(n())) %>%
+  ggplot(aes(x = reorder(Species, mean_AUDPC), y = mean_AUDPC)) +
+  geom_bar(stat = 'identity') +
+  geom_errorbar(aes(ymin = mean_AUDPC - se,
+                    ymax = mean_AUDPC + se),
+                width = 0.5) +
+  theme(axis.text.x = element_text(angle = 45,
+                                   hjust = 1, 
+                                   vjust = 1)) +
+  labs(y = 'Mean AUDPC', 
+       x = 'Species',
        title = 'AUDPC Values for May - September 2020', 
        subtitle = 'Low Gap, NC') 
 
