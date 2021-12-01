@@ -23,26 +23,6 @@ dat_2020$pdefol <- as.numeric(dat_2020$pdefol)
 dat_2020$pstem <- as.numeric(dat_2020$pstem) # changing data types
 
 ##
-### incomplete block anova
-##
-
-rating <-
-  dat_2020 %>%
-  filter(Date == "2020-11-01") # for ibd analysis for a single date
-
-m1 <- aov.ibd(pleaf ~ Treatment. + Rep, data = rating, details = T)
-m1
-HSD.test(m1$lm.obj, "Treatment.", console = T)
-
-m2 <- aov.ibd(pdefol ~ Treatment. + Rep, data = rating, details = T)
-m2
-HSD.test(m2$lm.obj, "Treatment.", console = T)
-
-m3 <- aov.ibd(pstem ~ Treatment. + Rep, data = rating, details = T)
-m3
-HSD.test(m3$lm.obj, "Treatment.", console = T)
-
-##
 ### audpc
 ##
 
@@ -62,6 +42,12 @@ e1_2020_audpc <-
   group_by(Treatment., Rep) %>%
   summarise(AUDPC = audpc(mean_pleaf, days)) # calculate AUDPC for each cultivar
 
+e1_2020_audpc %>%
+  group_by(Treatment.) %>%
+  summarise(mean_AUDPC = mean(AUDPC),
+            se = sd(AUDPC)/sqrt(n())) %>%
+  as.data.frame()
+
 e1_2020_audpc_species <-
 dat_2020 %>%
   group_by(days, Species, Rep) %>%
@@ -75,17 +61,21 @@ dat_2020 %>%
 
 m1_2020 <- aov(AUDPC ~ Treatment. + Rep, data = e1_2020_audpc) # cultivar
 summary(m1_2020)
-
 HSD.test(m1_2020, 'Treatment.', console = T)
+
+m1_ibd_2020 <- aov.ibd(AUDPC ~ Treatment. + Rep, data = e1_2020_audpc, details = T)
+m1_ibd_2020
+HSD.test(m1_ibd_2020$lm.obj, 'Treatment.', console = T)
 
 m2_2020 <- aov(AUDPC ~ Species + Rep, data = e1_2020_audpc_species) # species
 summary(m2_2020)
-
 HSD.test(m2_2020, 'Species', console = T)
 
 ##
 ### plots
 ##
+
+levels(as.factor(dat_2020$Date))
 
 e1_2020_audpc_bar <-
 e1_2020_audpc %>% # bar graph of AUDPC values for each cultivar
@@ -102,7 +92,7 @@ e1_2020_audpc %>% # bar graph of AUDPC values for each cultivar
                                    vjust = 1)) +
   labs(y = 'Mean AUDPC', 
        x = 'Cultivar',
-       title = 'AUDPC Values for May - September 2020', 
+       title = 'AUDPC Values for June - November 2020', 
        subtitle = 'Low Gap, NC') 
 
 e1_2020_audpc_species %>% # bar graph of AUDPC values for each species
@@ -122,12 +112,10 @@ e1_2020_audpc_species %>% # bar graph of AUDPC values for each species
        title = 'AUDPC Values for May - September 2020', 
        subtitle = 'Low Gap, NC') 
 
-dpc_2020 <- 
+dpc_2020_GV <- 
   dat_2020 %>% # disease progress curve for a single cultivar
   filter(is.na(pleaf) == F,
-         Date != '2020-09-21',
-         Date != '2020-11-01',
-         Treatment. == 'Dee Runk') %>%
+         Treatment. == 'Green Velvet') %>%
   group_by(Date, Treatment.) %>%
   summarise(mean_pleaf = mean(pleaf)) %>%
   ggplot() +
@@ -138,7 +126,7 @@ dpc_2020 <-
   scale_x_date(date_labels = "%D",
                date_breaks = "1 week") +
   labs(y = "Mean % Diseased Leaf Area",
-       title = "'Dee Runk' Disease Progress Curve - 2020") +
+       title = "'Green Velvet' Disease Progress Curve - 2020") +
   ylim(0, 100) +
   theme(plot.title = element_text(hjust = 0.5),
         axis.title.x = element_blank(),
@@ -191,10 +179,10 @@ bp_sep2020 <-
 
 setwd('./Analysis Output_E1/')
 
-pdf('audpc_bar_2020.pdf', 
-    height = 3,
+pdf('dpc_2020_GV.pdf', 
+    height = 4,
     width = 7)
 
-e1_2020_audpc_bar
+dpc_2020_GV
 
 dev.off()

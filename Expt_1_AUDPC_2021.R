@@ -41,28 +41,30 @@ dat_2021 %>%
   group_by(Species, Rep) %>%
   summarise(AUDPC = audpc(mean_pleaf, days))
 
-e1_avg_audpc <- 
-  e1_audpc %>% # average AUDPC across reps for each cultivar
+e1_2021_audpc %>% # average AUDPC across reps for each cultivar
+  filter(is.na(AUDPC) == F) %>%
   group_by(Cultivar) %>%
-  summarise(mean_AUDPC = mean(AUDPC))
+  summarise(mean_AUDPC = mean(AUDPC),
+            se = sd(AUDPC)/sqrt(n())) %>%
+  as.data.frame()
 
 ##
 ### audpc anova
 ##
 
-m1_2021 <- aov(AUDPC ~ Cultivar + Rep, data = e1_2021_audpc)
-summary(m1_2021)
+m1_ibd <- aov.ibd(AUDPC ~ Cultivar + Rep, data = e1_2021_audpc, details = T)
+m1_ibd
+HSD.test(m1_ibd$lm.obj, 'Cultivar', console = T)
 
-HSD.test(m1_2021, 'Cultivar', console = T)
-
-m2_2021 <- aov(AUDPC ~ Species + Rep, data = e1_2021_audpc_species)
-summary(m2_2021)
-
-HSD.test(m2_2021, 'Species', console = T)
+m2_ibd_species <- aov.ibd(AUDPC ~ Species + Rep, data = e1_2021_audpc_species, details = T)
+summary(m2_ibd_species)
+HSD.test(m2_ibd_species$lm.obj, 'Species', console = T)
 
 ##
 ### plots
 ##
+
+levels(as.factor(dat_2021$Date))
 
 e1_2021_audpc_bar <-
 e1_2021_audpc %>% # bar graph of AUDPC values for each cultivar
@@ -80,8 +82,9 @@ e1_2021_audpc %>% # bar graph of AUDPC values for each cultivar
                                    vjust = 1)) +
   labs(y = 'Mean AUDPC', 
        x = 'Cultivar',
-       title = 'AUDPC Values for May - September 2021', 
-       subtitle = 'Low Gap, NC') 
+       title = 'AUDPC Values for May - October 2021', 
+       subtitle = 'Low Gap, NC') +
+  ylim(0, 10000)
 
 e1_2021_audpc_species %>% # bar graph of AUDPC values for each species
   group_by(Species) %>%
@@ -101,11 +104,10 @@ e1_2021_audpc_species %>% # bar graph of AUDPC values for each species
        title = 'AUDPC Values for May - September 2021', 
        subtitle = 'Low Gap, NC') 
 
-dpc_2021 <- 
+dpc_2021_GV <- 
   dat_2021 %>% # disease progress curve for a single cultivar
   filter(is.na(pleaf) == F,
-         Date != '2020-09-19',
-         Cultivar == 'Dee Runk') %>%
+         Cultivar == 'Green Velvet') %>%
   group_by(Date, Cultivar) %>%
   summarise(mean_pleaf = mean(pleaf)) %>%
   ggplot() +
@@ -116,7 +118,7 @@ dpc_2021 <-
   scale_x_date(date_labels = "%D",
                date_breaks = "1 week") +
   labs(y = "Mean % Diseased Leaf Area",
-       title = "'Dee Runk' Disease Progress Curve - 2021") +
+       title = "'Green Velvet' Disease Progress Curve - 2021") +
   ylim(0, 100) +
   theme(plot.title = element_text(hjust = 0.5),
         axis.title.x = element_blank(),
@@ -160,10 +162,10 @@ bp_oct.10.2021 <-
 
 setwd('./Analysis Output_E1/')
 
-pdf('e1_2021_audpc_bar.pdf',
-    height = 3,
+pdf('dpc_2021_GV.pdf',
+    height = 4,
     width = 7)
 
-e1_2021_audpc_bar
+dpc_2021_GV
 
 dev.off()
