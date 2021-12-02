@@ -11,6 +11,7 @@ dat_2021 <-
 
 str(dat_2021)
 
+dat_2021$Treatment. <- gsub('Green Velvet2', 'Green Velvet', dat_2021$Treatment.)
 dat_2021$Treatment. <- as.factor(dat_2021$Treatment.)
 
 ##
@@ -23,7 +24,7 @@ dat_ordered <-
   summarise(mean_pleaf = mean(pleaf)) %>%
   arrange(mean_pleaf) # order by severity values
 
-rank <- rep(1:100, times = 1)
+rank <- rep(1:90, times = 1)
 dat_ordered$rank <- rank
 
 dat_rank_sums <- 
@@ -33,26 +34,23 @@ dat_rank_sums <-
   group_by(Treatment.) %>%
   summarise(rank_sum = sum(new_rank))
 
-mean(dat_rank_sums$rank_sum) # what is rank sum grand mean? 505
+mean(dat_rank_sums$rank_sum) # what is rank sum grand mean? 455
 
 dat_rank_sums_sd <- 
   dat_rank_sums %>% # calculate deviation of each cultivar from grand mean
-  mutate(difference = rank_sum - 505) %>%
+  mutate(difference = rank_sum - 455) %>%
   mutate(deviation = (difference/sd(rank_sum))*2)
 
-dat_rank_sums_full <- 
-  dat_ordered %>% # test for normality
-  group_by(as.factor(mean_pleaf)) %>%
-  mutate(new_rank = mean(rank)) %>%
-  group_by(Treatment.) %>%
-  mutate(rank_sum = sum(new_rank))
+##
+### test for normality
+##
 
-hist(dat_rank_sums_full$rank_sum)
+hist(dat_rank_sums_sd$deviation)
 
-shapiro.test(dat_rank_sums_full$rank_sum)
+shapiro.test(dat_rank_sums_sd$deviation)
 
-qqnorm(dat_rank_sums$rank_sum)
-qqline(dat_rank_sums$rank_sum)
+qqnorm(dat_rank_sums_sd$deviation)
+qqline(dat_rank_sums_sd$deviation)
 
 ##
 ### plots
