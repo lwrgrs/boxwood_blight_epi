@@ -72,6 +72,7 @@ pdf('normal_dist.pdf',
     height = 5,
     width = 7)
 
-
+plot(x, y, type = "l", lwd = 2, axes = FALSE, xlab = "", ylab = "")
+axis(1, at = -3:3, labels = c("-3", "-2", "-1", "Mean", "1", "2", "3"))
 
 dev.off()
