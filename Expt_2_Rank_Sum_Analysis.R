@@ -22,31 +22,32 @@ dat_2021$Treatment. <- as.factor(dat_2021$Treatment.)
 ### rank sum based on mean severity across dates
 ##
 
-d <- 
-  dat_2021 %>%
+d <- dat_2021 %>%
   group_by(Treatment.) %>% # calculate mean severity for each cultivar at each date
   summarise(mean_pleaf = mean(pleaf),
             mean_pstem = mean(pstem),
             mean_pdefol = mean(pdefol)) %>%
   arrange(mean_pleaf) %>%
-  mutate(rank = rep(1:9))
-
-d_rank_sums <- 
-  d %>% # calculate rank sum for each cultivar
+  mutate(rank_pleaf = rep(1:9)) %>%
+  arrange(mean_pstem) %>%
+  mutate(rank_pstem = rep(1:9)) %>%
+  arrange(mean_pdefol) %>%
+  mutate(rank_pdefol = rep(1:9))
+    
+d_rank_sums <- d %>% # calculate rank sum for each cultivar
   group_by(as.factor(mean_pleaf)) %>%
-  mutate(new_rank_pleaf = mean(rank)) %>%
+  mutate(new_rank_pleaf = mean(rank_pleaf)) %>%
   group_by(as.factor(mean_pstem)) %>%
-  mutate(new_rank_pstem = mean(rank)) %>%
+  mutate(new_rank_pstem = mean(rank_pstem)) %>%
   group_by(as.factor(mean_pdefol)) %>%
-  mutate(new_rank_pdefol = mean(rank)) %>%
-  select(Treatment., rank, new_rank_pdefol, new_rank_pleaf, new_rank_pstem) %>%
+  mutate(new_rank_pdefol = mean(rank_pdefol)) %>%
+  select(Treatment., new_rank_pdefol, new_rank_pleaf, new_rank_pstem) %>%
   group_by(Treatment.) %>%
   summarise(rank_sum = new_rank_pleaf + new_rank_pstem + new_rank_pdefol)
   
 mean(d_rank_sums$rank_sum) # grand mean: 15
 
-d_rank_sums_sd <- 
-  d_rank_sums %>% # calculate deviation of each cultivar from grand mean
+d_rank_sums_sd <- d_rank_sums %>% # calculate deviation of each cultivar from grand mean
   mutate(difference = rank_sum - 15) %>%
   mutate(deviation = (difference/sd(rank_sum))*2)
 
