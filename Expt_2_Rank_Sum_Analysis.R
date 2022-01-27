@@ -99,8 +99,7 @@ d <- dat_2021 %>%
   arrange(mean_pdefol) %>%
   mutate(rank_pdefol = rep(1:6))
 
-d_rank_sums <- x
-d %>% # calculate rank sum for each species
+d_rank_sums <- d %>% # calculate rank sum for each species
   group_by(as.factor(mean_pleaf)) %>%
   mutate(new_rank_pleaf = mean(rank_pleaf)) %>%
   group_by(as.factor(mean_pstem)) %>%
