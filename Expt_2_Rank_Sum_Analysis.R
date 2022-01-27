@@ -13,6 +13,7 @@ str(dat_2021)
 
 dat_2021$Treatment. <- gsub('Green Velvet2', 'Green Velvet', dat_2021$Treatment.)
 dat_2021$Treatment. <- as.factor(dat_2021$Treatment.)
+dat_2021$Species <- as.factor(dat_2021$Species)
 
 ##
 ### calculate rank sums
@@ -79,6 +80,44 @@ dat_rank_sums_sd <-
   dat_rank_sums %>% # calculate deviation of each cultivar from grand mean
   mutate(difference = rank_sum - 455) %>%
   mutate(deviation = (difference/sd(rank_sum))*2)
+
+##
+### rank sum of species
+##
+
+levels(dat_2021$Species)[levels(dat_2021$Species) == 'Bmicrosinica'] <- 'Bsinicainsularis'
+
+d <- dat_2021 %>%
+  group_by(Species) %>% # calculate mean severity for each species at each date
+  summarise(mean_pleaf = mean(pleaf),
+            mean_pstem = mean(pstem),
+            mean_pdefol = mean(pdefol)) %>%
+  arrange(mean_pleaf) %>%
+  mutate(rank_pleaf = rep(1:6)) %>%
+  arrange(mean_pstem) %>%
+  mutate(rank_pstem = rep(1:6)) %>%
+  arrange(mean_pdefol) %>%
+  mutate(rank_pdefol = rep(1:6))
+
+d_rank_sums <- x
+d %>% # calculate rank sum for each species
+  group_by(as.factor(mean_pleaf)) %>%
+  mutate(new_rank_pleaf = mean(rank_pleaf)) %>%
+  group_by(as.factor(mean_pstem)) %>%
+  mutate(new_rank_pstem = mean(rank_pstem)) %>%
+  group_by(as.factor(mean_pdefol)) %>%
+  mutate(new_rank_pdefol = mean(rank_pdefol)) %>%
+  select(Species, new_rank_pdefol, new_rank_pleaf, new_rank_pstem) #%>%
+  group_by(Species) %>%
+  summarise(rank_sum = new_rank_pleaf + new_rank_pstem + new_rank_pdefol)
+
+mean(d_rank_sums$rank_sum) # grand mean: 10.5
+
+d_rank_sums_sd <- d_rank_sums %>% # calculate deviation of each cultivar from grand mean
+  mutate(difference = rank_sum - 10.5) %>%
+  mutate(deviation = (difference/sd(rank_sum))*2)
+
+shapiro.test(d_rank_sums_sd$deviation) # test for normality
 
 ##
 ### plots
